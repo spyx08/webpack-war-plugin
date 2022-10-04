@@ -15,7 +15,6 @@ export type WebpackWarPluginOptions = {
   archiveName?: string;
   webInf?: string;
   additionalElements?: { path: string; destPath?: string }[];
-  archiverOptions?: archiver.Options;
 };
 
 export class WebpackWarPlugin implements Plugin {
@@ -36,8 +35,6 @@ export class WebpackWarPlugin implements Plugin {
         ? `${archiveBaseName}.war`
         : archiveBaseName;
 
-    const archiverOptions = this.options.archiverOptions || { store: true };
-
     const additionalElements = (this.options.additionalElements || []).concat(
       this.options.webInf
         ? { path: this.options.webInf, destPath: "WEB-INF" }
@@ -50,15 +47,15 @@ export class WebpackWarPlugin implements Plugin {
         : null) || compiler["outputPath"];
 
     compiler.hooks.afterEmit.tap(
-      "WebpackWarPlugin",
+      "after-emit",
       (compilation: { assets: { [name: string]: any } }) => {
-        const archive = this.archiver("zip", archiverOptions);
+        const archive = this.archiver("zip", { store: true });
         const outStream = createWriteStream(resolve(outputPath, archiveName));
         archive.pipe(outStream);
 
         Object.getOwnPropertyNames(compilation.assets).forEach(asset => {
           const srcPath = resolve(outputPath, asset);
-          archive.append(srcPath, { name: normalize(asset) });
+          archive.append(readFileSync(srcPath), { name: normalize(asset) });
         });
 
         additionalElements.forEach(({ path, destPath }) => {
@@ -67,7 +64,9 @@ export class WebpackWarPlugin implements Plugin {
           if (lstatSync(srcPath).isDirectory()) {
             archive.directory(srcPath, destPath || normalize(path));
           } else {
-            archive.append(srcPath, { name: destPath || normalize(path) });
+            archive.append(readFileSync(srcPath), {
+              name: destPath || normalize(path)
+            });
           }
         });
 
@@ -84,11 +83,11 @@ export class WebpackWarPlugin implements Plugin {
           console.error(bold(red(`Error while creating WAR archive: ${err}`)));
         });
 
-        compiler.hooks.done.tap("WebpackWarPlugin", () => {
+        compiler.hooks.done.tap("done", () => {
           archive.finalize();
         });
 
-        compiler.hooks.failed.tap("WebpackWarPlugin", () => {
+        compiler.hooks.failed.tap("failed", () => {
           archive.finalize();
         });
       }
