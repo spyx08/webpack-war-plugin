@@ -1,11 +1,11 @@
 {
-  "name": "webpack-war-plugin",
+  "name": "webpack5-war-plugin",
   "version": "1.0.0",
   "description": "Webpack plugin for bundling build outputs into a WAR archive",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/DevWurm/webpack-war-plugin",
-  "author": "DevWurm",
+  "repository": "https://github.com/spyx08/webpack-war-plugin",
+  "author": "Nivelle Alexis",
   "license": "MIT",
   "scripts": {
     "prebuild": "npm run clean",
@@ -16,6 +16,9 @@
     "test:functional:setup": "cd functional_tests && npm install && npm run setup",
     "test:functional": "cd functional_tests && npm run test",
     "coveralls": "cat ./coverage/lcov.info | coveralls"
+  },
+  "publishConfig": {
+    "registry": "https://nexus-prod/nexus/content/repositories/bba-npm-private/"
   },
   "dependencies": {
     "archiver": "^1.3.0",
